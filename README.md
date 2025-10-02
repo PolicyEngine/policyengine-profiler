@@ -12,7 +12,14 @@ Diagnose and visualize performance bottlenecks in PolicyEngine simulations, espe
 
 ## Issues Discovered
 
-- **[policyengine-core#397](https://github.com/PolicyEngine/policyengine-core/issues/397)**: Parameter uprating takes 11+ seconds per reform simulation (700x slowdown)
+- **[policyengine-core#397](https://github.com/PolicyEngine/policyengine-core/issues/397)**: Parameter uprating takes 11+ seconds per reform simulation (700-1500x slowdown)
+
+## Example Output
+
+See [DEMO.md](DEMO.md) for full example output showing:
+- **Baseline simulation**: 0.011s ✅
+- **Reform simulation**: 16.445s ❌ (1511x slower!)
+- **Main bottleneck**: `uprate_parameters()` at 11.2 seconds
 
 ## Tools
 
