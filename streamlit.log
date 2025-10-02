@@ -10,28 +10,3 @@
   $ xcode-select --install
   $ pip install watchdog
             
-2025-10-02 09:34:04.763 Uncaught app execution
-Traceback (most recent call last):
-  File "/Users/maxghenis/PolicyEngine/ACA-Calc/.venv/lib/python3.12/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 128, in exec_func_with_error_handling
-    result = func()
-             ^^^^^^
-  File "/Users/maxghenis/PolicyEngine/ACA-Calc/.venv/lib/python3.12/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 669, in code_to_exec
-    exec(code, module.__dict__)  # noqa: S102
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/maxghenis/PolicyEngine/policyengine-profiler/app.py", line 231, in <module>
-    if use_reform:
-       ^^^^^^^^^^
-NameError: name 'use_reform' is not defined. Did you mean: 'get_reform'?
-Task exception was never retrieved
-future: <Task finished name='Task-456' coro=<WebSocketProtocol13.write_message.<locals>.wrapper() done, defined at /Users/maxghenis/PolicyEngine/ACA-Calc/.venv/lib/python3.12/site-packages/tornado/websocket.py:1111> exception=WebSocketClosedError()>
-Traceback (most recent call last):
-  File "/Users/maxghenis/PolicyEngine/ACA-Calc/.venv/lib/python3.12/site-packages/tornado/websocket.py", line 1113, in wrapper
-    await fut
-tornado.iostream.StreamClosedError: Stream is closed
-
-During handling of the above exception, another exception occurred:
-
-Traceback (most recent call last):
-  File "/Users/maxghenis/PolicyEngine/ACA-Calc/.venv/lib/python3.12/site-packages/tornado/websocket.py", line 1115, in wrapper
-    raise WebSocketClosedError()
-tornado.websocket.WebSocketClosedError
