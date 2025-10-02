@@ -70,26 +70,33 @@ st.markdown(
         border-color: {COLORS["blue_gradient"][2]};
         color: {COLORS["blue_gradient"][2]};
     }}
-    /* Style sliders - target all slider elements */
-    .stSlider > div > div > div > div {{
-        background-color: {COLORS["primary"]} !important;
+    /* Style sliders - nuclear approach to override all red */
+    .stSlider {{
+        color: {COLORS["primary"]} !important;
     }}
-    .stSlider [data-baseweb="slider"] > div > div {{
-        background-color: {COLORS["primary"]} !important;
+    .stSlider * {{
+        color: {COLORS["primary"]} !important;
+    }}
+    .stSlider [data-baseweb="slider"] {{
+        background-color: transparent !important;
+    }}
+    .stSlider [data-baseweb="slider"] > div {{
+        background: linear-gradient(to right,
+            {COLORS["primary"]} 0%,
+            {COLORS["primary"]} var(--value, 50%),
+            #e0e0e0 var(--value, 50%),
+            #e0e0e0 100%) !important;
     }}
     .stSlider [data-baseweb="slider"] [role="slider"] {{
         background-color: {COLORS["primary"]} !important;
+        border-color: {COLORS["primary"]} !important;
     }}
-    /* Slider thumb */
     .stSlider [data-baseweb="slider"] [role="slider"] > div {{
         background-color: {COLORS["primary"]} !important;
     }}
-    /* Slider value text */
-    .stSlider [data-testid="stTickBar"] > div {{
-        color: {COLORS["primary"]} !important;
-    }}
-    .stSlider > div > div > div:first-child {{
-        color: {COLORS["primary"]} !important;
+    /* Slider value popup */
+    .stSlider div[data-baseweb="tooltip"] {{
+        background-color: {COLORS["primary"]} !important;
     }}
     /* Style selectbox */
     .stSelectbox > div > div {{
@@ -108,19 +115,23 @@ st.markdown(
         background-color: rgba(44, 100, 150, 0.05);
         color: {COLORS["primary"]};
     }}
-    /* Style checkboxes */
-    .stCheckbox > label > div[data-testid="stMarkdownContainer"] > p {{
-        color: {COLORS["primary"]};
+    /* Style checkboxes - nuclear approach */
+    .stCheckbox {{
+        color: {COLORS["primary"]} !important;
     }}
-    .stCheckbox input[type="checkbox"]:checked + div {{
-        background-color: {COLORS["primary"]} !important;
+    .stCheckbox * {{
+        color: {COLORS["primary"]} !important;
     }}
     .stCheckbox [data-baseweb="checkbox"] {{
+        background-color: {COLORS["primary"]} !important;
         border-color: {COLORS["primary"]} !important;
     }}
     .stCheckbox [data-baseweb="checkbox"] > div {{
         background-color: {COLORS["primary"]} !important;
         border-color: {COLORS["primary"]} !important;
+    }}
+    .stCheckbox svg {{
+        fill: white !important;
     }}
     /* Style number input value text */
     .stNumberInput > div > div > input {{
