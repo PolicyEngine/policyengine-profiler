@@ -51,6 +51,46 @@ st.markdown(
     h3 {{
         color: {COLORS["primary"]};
     }}
+    /* Style primary buttons */
+    .stButton > button[kind="primary"] {{
+        background-color: {COLORS["primary"]};
+        color: white;
+        border: none;
+    }}
+    .stButton > button[kind="primary"]:hover {{
+        background-color: {COLORS["blue_gradient"][2]};
+        border: none;
+    }}
+    /* Style regular buttons */
+    .stButton > button {{
+        border-color: {COLORS["primary"]};
+        color: {COLORS["primary"]};
+    }}
+    .stButton > button:hover {{
+        border-color: {COLORS["blue_gradient"][2]};
+        color: {COLORS["blue_gradient"][2]};
+    }}
+    /* Style sliders */
+    .stSlider > div > div > div > div {{
+        background-color: {COLORS["primary"]};
+    }}
+    /* Style selectbox */
+    .stSelectbox > div > div {{
+        border-color: {COLORS["gray"]};
+    }}
+    /* Style tabs */
+    .stTabs [data-baseweb="tab-list"] button[aria-selected="true"] {{
+        background-color: {COLORS["primary"]};
+        color: white;
+    }}
+    .stTabs [data-baseweb="tab-list"] button {{
+        color: {COLORS["primary"]};
+    }}
+    /* Style expandable sections */
+    .streamlit-expanderHeader {{
+        background-color: rgba(44, 100, 150, 0.05);
+        color: {COLORS["primary"]};
+    }}
     </style>
 """,
     unsafe_allow_html=True,
