@@ -12,10 +12,10 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 try:
-    from policyengine_us import Simulation
     from policyengine_core.reforms import Reform
+    # Simulation classes imported conditionally based on selected country
 except ImportError:
-    st.error("Please install policyengine-us: `uv pip install policyengine-us`")
+    st.error("Please install PolicyEngine packages: `uv pip install policyengine-us policyengine-uk`")
     st.stop()
 
 st.set_page_config(
@@ -149,19 +149,26 @@ with st.sidebar:
 
     st.subheader("Test Configuration")
 
+    country = st.radio("Country", ["US", "UK"], index=0, horizontal=True)
+
     income_points = st.slider("Income data points", 10, 2000, 1001, step=10,
                               help="More points = slower calculations (doesn't affect simulation creation overhead)")
 
-    reform_type = st.selectbox(
-        "Reform to profile",
-        ["ACA PTC Extension"],
-        index=0,
-        help="The household setup doesn't affect the parameter uprating bottleneck"
-    )
+    # Show what's being tested
+    st.markdown("---")
+    st.caption("**Test Setup:**")
+    st.caption("• **Type:** Individual household calculations")
+    st.caption("  *(not microsimulation)*")
+    if country == "US":
+        st.caption("• **Reform:** ACA PTC Extension")
+        st.caption("• **Household:** 35yo, TX, $0-1M income")
+    else:
+        st.caption("• **Reform:** Universal Credit +10%")
+        st.caption("• **Household:** 35yo, England, £0-100k")
 
-def get_reform():
-    """Get the reform definition based on user selection"""
-    if reform_type == "ACA PTC Extension":
+def get_reform(country):
+    """Get the reform definition based on country"""
+    if country == "US":
         return Reform.from_dict({
             "gov.aca.ptc_phase_out_rate[0].amount": {"2026-01-01.2100-12-31": 0},
             "gov.aca.ptc_phase_out_rate[1].amount": {"2025-01-01.2100-12-31": 0},
@@ -172,35 +179,57 @@ def get_reform():
             "gov.aca.ptc_phase_out_rate[6].amount": {"2026-01-01.2100-12-31": 0.085},
             "gov.aca.ptc_income_eligibility[2].amount": {"2026-01-01.2100-12-31": True}
         }, country_id="us")
-    else:
-        # Custom reform - could add text input here
-        return None
+    else:  # UK
+        return Reform.from_dict({
+            "gov.dwp.universal_credit.elements.standard_allowance.amount.single.under_25": {
+                "2024-01-01.2100-12-31": 311.68 * 1.1  # 10% increase
+            }
+        }, country_id="uk")
 
-def build_situation(income_points):
+def build_situation(income_points, country):
     """Build a standard test situation
 
     Note: Household config doesn't affect the parameter uprating bottleneck.
     The 6-7 second overhead happens regardless of age, income, etc.
     """
-    return {
-        "people": {"you": {"age": {2026: 35}}},
-        "families": {"your family": {"members": ["you"]}},
-        "spm_units": {"your household": {"members": ["you"]}},
-        "tax_units": {"your tax unit": {"members": ["you"]}},
-        "households": {
-            "your household": {
-                "members": ["you"],
-                "state_name": {2026: "TX"}
-            }
-        },
-        "axes": [[{
-            "name": "employment_income",
-            "count": income_points,
-            "min": 0,
-            "max": 1000000,
-            "period": 2026
-        }]]
-    }
+    if country == "US":
+        return {
+            "people": {"you": {"age": {2026: 35}}},
+            "families": {"your family": {"members": ["you"]}},
+            "spm_units": {"your household": {"members": ["you"]}},
+            "tax_units": {"your tax unit": {"members": ["you"]}},
+            "households": {
+                "your household": {
+                    "members": ["you"],
+                    "state_name": {2026: "TX"}
+                }
+            },
+            "axes": [[{
+                "name": "employment_income",
+                "count": income_points,
+                "min": 0,
+                "max": 1000000,
+                "period": 2026
+            }]]
+        }
+    else:  # UK
+        return {
+            "people": {"you": {"age": {2024: 35}}},
+            "benunits": {"your benunit": {"members": ["you"]}},
+            "households": {
+                "your household": {
+                    "members": ["you"],
+                    "region": {2024: "ENGLAND"}
+                }
+            },
+            "axes": [[{
+                "name": "employment_income",
+                "count": income_points,
+                "min": 0,
+                "max": 100000,
+                "period": 2024
+            }]]
+        }
 
 def profile_step(name, func):
     """Profile a single step with timing and cProfile"""
@@ -227,7 +256,13 @@ def profile_step(name, func):
 
 # Main profiling section
 if st.button("🚀 Run Profile", type="primary", use_container_width=True):
-    situation = build_situation(income_points)
+    situation = build_situation(income_points, country)
+
+    # Import the correct Simulation class based on country
+    if country == "US":
+        from policyengine_us import Simulation
+    else:
+        from policyengine_uk import Simulation
 
     with st.spinner("Profiling simulations..."):
         # Profile baseline
@@ -241,7 +276,7 @@ if st.button("🚀 Run Profile", type="primary", use_container_width=True):
 
         # Profile reform
         st.markdown("### Step 2: Reform Simulation")
-        reform = get_reform()
+        reform = get_reform(country)
 
         if reform:
             reform_result = profile_step(
