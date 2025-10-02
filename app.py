@@ -24,6 +24,38 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# PolicyEngine brand colors (matches policyengine-app)
+COLORS = {
+    "primary": "#2C6496",  # Blue for extension/reform
+    "secondary": "#39C6C0",
+    "green": "#28A745",
+    "gray": "#BDBDBD",  # Medium light gray for baseline
+    "red": "#E57373",  # Light red for warnings/slowdowns
+    "orange": "#FFA726",
+    "blue_gradient": ["#D1E5F0", "#92C5DE", "#2166AC", "#053061"],
+}
+
+st.markdown(
+    f"""
+    <style>
+    .stApp {{
+        font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif;
+    }}
+    h1 {{
+        color: {COLORS["primary"]};
+        font-weight: 600;
+    }}
+    h2 {{
+        color: {COLORS["primary"]};
+    }}
+    h3 {{
+        color: {COLORS["primary"]};
+    }}
+    </style>
+""",
+    unsafe_allow_html=True,
+)
+
 st.title("🔬 PolicyEngine Performance Profiler")
 st.markdown("""
 Diagnose performance bottlenecks in PolicyEngine simulations.
@@ -169,7 +201,7 @@ if st.button("🚀 Run Profile", type="primary", use_container_width=True):
                         y=[baseline_result['time'], reform_result['time']],
                         text=[f"{baseline_result['time']:.3f}s", f"{reform_result['time']:.3f}s"],
                         textposition='outside',
-                        marker_color=['#2C6496', '#E57373']
+                        marker_color=[COLORS['gray'], COLORS['red']]
                     ),
                     row=1, col=1
                 )
@@ -179,7 +211,7 @@ if st.button("🚀 Run Profile", type="primary", use_container_width=True):
                     go.Pie(
                         labels=["Parameter Uprating (est.)", "Other Overhead", "Base Simulation"],
                         values=[overhead * 0.8, overhead * 0.2, baseline_result['time']],
-                        marker=dict(colors=['#E57373', '#FFA726', '#66BB6A'])
+                        marker=dict(colors=[COLORS['red'], COLORS['orange'], COLORS['green']])
                     ),
                     row=1, col=2
                 )
@@ -187,7 +219,13 @@ if st.button("🚀 Run Profile", type="primary", use_container_width=True):
                 fig.update_layout(
                     height=400,
                     showlegend=True,
-                    title_text="Simulation Creation Performance"
+                    title={
+                        "text": "Simulation Creation Performance",
+                        "font": {"size": 20, "color": COLORS["primary"]},
+                    },
+                    plot_bgcolor='white',
+                    paper_bgcolor='white',
+                    font=dict(family='Roboto, sans-serif')
                 )
 
                 st.plotly_chart(fig, use_container_width=True)
