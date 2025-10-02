@@ -138,13 +138,14 @@ with st.sidebar:
 
     # Show package versions
     try:
-        import policyengine_us
-        import policyengine_core
-        st.caption(f"📦 policyengine-us: `{policyengine_us.__version__}`")
-        st.caption(f"📦 policyengine-core: `{policyengine_core.__version__}`")
+        from importlib.metadata import version
+        us_version = version('policyengine-us')
+        core_version = version('policyengine-core')
+        st.caption(f"📦 policyengine-us: `{us_version}`")
+        st.caption(f"📦 policyengine-core: `{core_version}`")
         st.markdown("---")
     except Exception as e:
-        st.caption("⚠️ Could not load versions")
+        st.caption(f"⚠️ Version info unavailable: {str(e)}")
 
     st.subheader("Test Configuration")
 
