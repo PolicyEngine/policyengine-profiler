@@ -70,33 +70,23 @@ st.markdown(
         border-color: {COLORS["blue_gradient"][2]};
         color: {COLORS["blue_gradient"][2]};
     }}
-    /* Style sliders - nuclear approach to override all red */
-    .stSlider {{
+    /* Style sliders - surgical approach */
+    /* Hide default red slider elements */
+    .stSlider [data-baseweb="slider"] [data-testid="stThumbValue"] {{
         color: {COLORS["primary"]} !important;
+        background-color: {COLORS["primary"]} !important;
     }}
-    .stSlider * {{
-        color: {COLORS["primary"]} !important;
+    /* Slider track - filled portion */
+    .stSlider [data-baseweb="slider"] > div > div:first-child {{
+        background-color: {COLORS["primary"]} !important;
     }}
-    .stSlider [data-baseweb="slider"] {{
-        background-color: transparent !important;
-    }}
-    .stSlider [data-baseweb="slider"] > div {{
-        background: linear-gradient(to right,
-            {COLORS["primary"]} 0%,
-            {COLORS["primary"]} var(--value, 50%),
-            #e0e0e0 var(--value, 50%),
-            #e0e0e0 100%) !important;
-    }}
+    /* Slider thumb */
     .stSlider [data-baseweb="slider"] [role="slider"] {{
         background-color: {COLORS["primary"]} !important;
-        border-color: {COLORS["primary"]} !important;
     }}
-    .stSlider [data-baseweb="slider"] [role="slider"] > div {{
-        background-color: {COLORS["primary"]} !important;
-    }}
-    /* Slider value popup */
-    .stSlider div[data-baseweb="tooltip"] {{
-        background-color: {COLORS["primary"]} !important;
+    /* Value label text */
+    .stSlider > div > div:first-child > div {{
+        color: {COLORS["primary"]} !important;
     }}
     /* Style selectbox */
     .stSelectbox > div > div {{
@@ -115,22 +105,15 @@ st.markdown(
         background-color: rgba(44, 100, 150, 0.05);
         color: {COLORS["primary"]};
     }}
-    /* Style checkboxes - nuclear approach */
-    .stCheckbox {{
-        color: {COLORS["primary"]} !important;
-    }}
-    .stCheckbox * {{
-        color: {COLORS["primary"]} !important;
-    }}
+    /* Style checkboxes - target the actual checkbox input */
     .stCheckbox [data-baseweb="checkbox"] {{
         background-color: {COLORS["primary"]} !important;
         border-color: {COLORS["primary"]} !important;
     }}
-    .stCheckbox [data-baseweb="checkbox"] > div {{
+    .stCheckbox input[type="checkbox"]:checked ~ div {{
         background-color: {COLORS["primary"]} !important;
-        border-color: {COLORS["primary"]} !important;
     }}
-    .stCheckbox svg {{
+    .stCheckbox input[type="checkbox"]:checked ~ div svg {{
         fill: white !important;
     }}
     /* Style number input value text */
