@@ -146,19 +146,16 @@ with st.sidebar:
     except Exception as e:
         st.caption("⚠️ Could not load versions")
 
-    country = st.selectbox("Country", ["us", "uk", "canada"], index=0)
+    st.subheader("Test Configuration")
 
-    st.subheader("Household Setup")
-    age = st.slider("Age", 18, 100, 35)
     income_points = st.slider("Income data points", 10, 2000, 1001, step=10,
-                              help="More points = slower but more accurate charts")
-    max_income = st.number_input("Max income", 0, 10000000, 1000000, step=100000)
+                              help="More points = slower calculations (doesn't affect simulation creation overhead)")
 
-    st.subheader("Reform")
     reform_type = st.selectbox(
-        "Reform type",
-        ["ACA PTC Extension", "Custom"],
-        index=0
+        "Reform to profile",
+        ["ACA PTC Extension"],
+        index=0,
+        help="The household setup doesn't affect the parameter uprating bottleneck"
     )
 
 def get_reform():
@@ -178,10 +175,14 @@ def get_reform():
         # Custom reform - could add text input here
         return None
 
-def build_situation(age, income_points, max_income):
-    """Build the situation dictionary"""
+def build_situation(income_points):
+    """Build a standard test situation
+
+    Note: Household config doesn't affect the parameter uprating bottleneck.
+    The 6-7 second overhead happens regardless of age, income, etc.
+    """
     return {
-        "people": {"you": {"age": {2026: age}}},
+        "people": {"you": {"age": {2026: 35}}},
         "families": {"your family": {"members": ["you"]}},
         "spm_units": {"your household": {"members": ["you"]}},
         "tax_units": {"your tax unit": {"members": ["you"]}},
@@ -195,7 +196,7 @@ def build_situation(age, income_points, max_income):
             "name": "employment_income",
             "count": income_points,
             "min": 0,
-            "max": max_income,
+            "max": 1000000,
             "period": 2026
         }]]
     }
@@ -225,7 +226,7 @@ def profile_step(name, func):
 
 # Main profiling section
 if st.button("🚀 Run Profile", type="primary", use_container_width=True):
-    situation = build_situation(age, income_points, max_income)
+    situation = build_situation(income_points)
 
     with st.spinner("Profiling simulations..."):
         # Profile baseline
