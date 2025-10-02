@@ -1,0 +1,10 @@
+[theme]
+# PolicyEngine brand colors
+primaryColor = "#2C6496"  # Brand blue - controls sliders, checkboxes, etc.
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F0F2F6"
+textColor = "#262730"
+font = "sans serif"
+
+[server]
+headless = true
