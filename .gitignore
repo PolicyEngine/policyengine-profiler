@@ -44,3 +44,6 @@ Thumbs.db
 # Profiling output
 *.prof
 *.profile
+
+# UV files (use pip for Streamlit Cloud)
+uv.lock
