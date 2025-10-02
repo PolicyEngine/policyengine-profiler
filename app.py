@@ -136,6 +136,16 @@ Diagnose performance bottlenecks in PolicyEngine simulations.
 with st.sidebar:
     st.header("Configuration")
 
+    # Show package versions
+    try:
+        import policyengine_us
+        import policyengine_core
+        st.caption(f"📦 policyengine-us: `{policyengine_us.__version__}`")
+        st.caption(f"📦 policyengine-core: `{policyengine_core.__version__}`")
+        st.markdown("---")
+    except Exception as e:
+        st.caption("⚠️ Could not load versions")
+
     country = st.selectbox("Country", ["us", "uk", "canada"], index=0)
 
     st.subheader("Household Setup")
@@ -145,14 +155,11 @@ with st.sidebar:
     max_income = st.number_input("Max income", 0, 10000000, 1000000, step=100000)
 
     st.subheader("Reform")
-    use_reform = st.checkbox("Profile with reform", value=True)
-
-    if use_reform:
-        reform_type = st.selectbox(
-            "Reform type",
-            ["ACA PTC Extension", "Custom"],
-            index=0
-        )
+    reform_type = st.selectbox(
+        "Reform type",
+        ["ACA PTC Extension", "Custom"],
+        index=0
+    )
 
 def get_reform():
     """Get the reform definition based on user selection"""
@@ -230,105 +237,104 @@ if st.button("🚀 Run Profile", type="primary", use_container_width=True):
 
         st.metric("Baseline Time", f"{baseline_result['time']:.3f}s")
 
-        # Profile reform if requested
-        if use_reform:
-            st.markdown("### Step 2: Reform Simulation")
-            reform = get_reform()
+        # Profile reform
+        st.markdown("### Step 2: Reform Simulation")
+        reform = get_reform()
 
-            if reform:
-                reform_result = profile_step(
-                    "Reform",
-                    lambda: Simulation(situation=situation, reform=reform)
-                )
+        if reform:
+            reform_result = profile_step(
+                "Reform",
+                lambda: Simulation(situation=situation, reform=reform)
+            )
 
-                overhead = reform_result['time'] - baseline_result['time']
-                overhead_pct = (reform_result['time'] / baseline_result['time'] - 1) * 100
+            overhead = reform_result['time'] - baseline_result['time']
+            overhead_pct = (reform_result['time'] / baseline_result['time'] - 1) * 100
 
-                col1, col2, col3 = st.columns(3)
-                with col1:
-                    st.metric("Reform Time", f"{reform_result['time']:.3f}s")
-                with col2:
-                    st.metric("Overhead", f"{overhead:.3f}s",
-                             delta=f"{overhead_pct:,.0f}% slower",
-                             delta_color="inverse")
-                with col3:
-                    st.metric("Slowdown Factor", f"{reform_result['time']/baseline_result['time']:.1f}x")
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric("Reform Time", f"{reform_result['time']:.3f}s")
+            with col2:
+                st.metric("Overhead", f"{overhead:.3f}s",
+                         delta=f"{overhead_pct:,.0f}% slower",
+                         delta_color="inverse")
+            with col3:
+                st.metric("Slowdown Factor", f"{reform_result['time']/baseline_result['time']:.1f}x")
 
-                # Visualization
-                st.markdown("### Performance Comparison")
+            # Visualization
+            st.markdown("### Performance Comparison")
 
-                # Create 3-column layout for better comparison
-                fig = make_subplots(
-                    rows=1, cols=3,
-                    subplot_titles=("Time Comparison", "Reform Time Breakdown", "Function Calls"),
-                    specs=[[{"type": "bar"}, {"type": "pie"}, {"type": "bar"}]],
-                    column_widths=[0.3, 0.35, 0.35]
-                )
+            # Create 3-column layout for better comparison
+            fig = make_subplots(
+                rows=1, cols=3,
+                subplot_titles=("Time Comparison", "Reform Time Breakdown", "Function Calls"),
+                specs=[[{"type": "bar"}, {"type": "pie"}, {"type": "bar"}]],
+                column_widths=[0.3, 0.35, 0.35]
+            )
 
-                # Bar chart
-                fig.add_trace(
-                    go.Bar(
-                        x=["Baseline", "Reform"],
-                        y=[baseline_result['time'], reform_result['time']],
-                        text=[f"{baseline_result['time']:.3f}s", f"{reform_result['time']:.3f}s"],
-                        textposition='outside',
-                        marker_color=[COLORS['gray'], COLORS['red']]
-                    ),
-                    row=1, col=1
-                )
+            # Bar chart
+            fig.add_trace(
+                go.Bar(
+                    x=["Baseline", "Reform"],
+                    y=[baseline_result['time'], reform_result['time']],
+                    text=[f"{baseline_result['time']:.3f}s", f"{reform_result['time']:.3f}s"],
+                    textposition='outside',
+                    marker_color=[COLORS['gray'], COLORS['red']]
+                ),
+                row=1, col=1
+            )
 
-                # Pie chart of reform time breakdown
-                fig.add_trace(
-                    go.Pie(
-                        labels=["Parameter Uprating", "Other Overhead", "Base Simulation"],
-                        values=[overhead * 0.68, overhead * 0.32, baseline_result['time']],
-                        marker=dict(colors=[COLORS['red'], COLORS['orange'], COLORS['green']]),
-                        textinfo='label+percent'
-                    ),
-                    row=1, col=2
-                )
+            # Pie chart of reform time breakdown
+            fig.add_trace(
+                go.Pie(
+                    labels=["Parameter Uprating", "Other Overhead", "Base Simulation"],
+                    values=[overhead * 0.68, overhead * 0.32, baseline_result['time']],
+                    marker=dict(colors=[COLORS['red'], COLORS['orange'], COLORS['green']]),
+                    textinfo='label+percent'
+                ),
+                row=1, col=2
+            )
 
-                # Function calls comparison (estimated from typical ratios)
-                # Baseline: ~100k calls, Reform: ~85M calls
-                baseline_calls = 100000  # Estimated
-                reform_calls = 85600000  # Typical for reform
+            # Function calls comparison (estimated from typical ratios)
+            # Baseline: ~100k calls, Reform: ~85M calls
+            baseline_calls = 100000  # Estimated
+            reform_calls = 85600000  # Typical for reform
 
-                fig.add_trace(
-                    go.Bar(
-                        x=["Baseline", "Reform"],
-                        y=[baseline_calls / 1e6, reform_calls / 1e6],
-                        text=[f"{baseline_calls/1e6:.1f}M", f"{reform_calls/1e6:.0f}M"],
-                        textposition='outside',
-                        marker_color=[COLORS['gray'], COLORS['red']],
-                        yaxis='y3',
-                        showlegend=False
-                    ),
-                    row=1, col=3
-                )
+            fig.add_trace(
+                go.Bar(
+                    x=["Baseline", "Reform"],
+                    y=[baseline_calls / 1e6, reform_calls / 1e6],
+                    text=[f"{baseline_calls/1e6:.1f}M", f"{reform_calls/1e6:.0f}M"],
+                    textposition='outside',
+                    marker_color=[COLORS['gray'], COLORS['red']],
+                    yaxis='y3',
+                    showlegend=False
+                ),
+                row=1, col=3
+            )
 
-                fig.update_layout(
-                    height=400,
-                    showlegend=False,
-                    title={
-                        "text": "Simulation Creation Performance Analysis",
-                        "font": {"size": 20, "color": COLORS["primary"]},
-                    },
-                    plot_bgcolor='white',
-                    paper_bgcolor='white',
-                    font=dict(family='Roboto, sans-serif')
-                )
+            fig.update_layout(
+                height=400,
+                showlegend=False,
+                title={
+                    "text": "Simulation Creation Performance Analysis",
+                    "font": {"size": 20, "color": COLORS["primary"]},
+                },
+                plot_bgcolor='white',
+                paper_bgcolor='white',
+                font=dict(family='Roboto, sans-serif')
+            )
 
-                # Update axes
-                fig.update_xaxes(title_text="", row=1, col=1)
-                fig.update_yaxes(title_text="Time (seconds)", row=1, col=1)
-                fig.update_xaxes(title_text="", row=1, col=3)
-                fig.update_yaxes(title_text="Function Calls (millions)", row=1, col=3)
+            # Update axes
+            fig.update_xaxes(title_text="", row=1, col=1)
+            fig.update_yaxes(title_text="Time (seconds)", row=1, col=1)
+            fig.update_xaxes(title_text="", row=1, col=3)
+            fig.update_yaxes(title_text="Function Calls (millions)", row=1, col=3)
 
-                st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, use_container_width=True)
 
-                # Interpretation guide
-                st.markdown("#### 📊 What This Means")
-                st.info(f"""
+            # Interpretation guide
+            st.markdown("#### 📊 What This Means")
+            st.info(f"""
 **The Problem:** Creating a reform simulation makes **{reform_calls/baseline_calls:,.0f}x more function calls** than baseline!
 
 **Where the time goes:**
@@ -343,49 +349,47 @@ if st.button("🚀 Run Profile", type="primary", use_container_width=True):
 - Calendar operations: 1.7M calls → 1.4 seconds
 
 All of this happens **before any actual calculation** - it's just to set up the reformed tax system!
-                """)
+            """)
 
-                # Detailed profiles
-                with st.expander("📊 Detailed Baseline Profile"):
-                    st.code(baseline_result['profile'])
+            # Detailed profiles
+            with st.expander("📊 Detailed Baseline Profile"):
+                st.code(baseline_result['profile'])
 
-                with st.expander("📊 Detailed Reform Profile"):
-                    st.code(reform_result['profile'])
+            with st.expander("📊 Detailed Reform Profile"):
+                st.code(reform_result['profile'])
 
-                # Profile calculations
-                st.markdown("### Step 3: Calculate Variables")
+            # Profile calculations
+            st.markdown("### Step 3: Calculate Variables")
 
-                sim_baseline = baseline_result['result']
-                sim_reform = reform_result['result']
+            sim_baseline = baseline_result['result']
+            sim_reform = reform_result['result']
 
-                variable_to_test = st.selectbox(
-                    "Variable to profile",
-                    ["employment_income", "aca_ptc", "income_tax", "household_net_income"]
-                )
+            variable_to_test = st.selectbox(
+                "Variable to profile",
+                ["employment_income", "aca_ptc", "income_tax", "household_net_income"]
+            )
 
-                if st.button("Profile Variable Calculation"):
-                    with st.spinner(f"Calculating {variable_to_test}..."):
-                        # Baseline variable calculation
-                        baseline_calc = profile_step(
-                            f"Baseline {variable_to_test}",
-                            lambda: sim_baseline.calculate(variable_to_test, map_to="household", period=2026)
-                        )
+            if st.button("Profile Variable Calculation"):
+                with st.spinner(f"Calculating {variable_to_test}..."):
+                    # Baseline variable calculation
+                    baseline_calc = profile_step(
+                        f"Baseline {variable_to_test}",
+                        lambda: sim_baseline.calculate(variable_to_test, map_to="household", period=2026)
+                    )
 
-                        # Reform variable calculation
-                        reform_calc = profile_step(
-                            f"Reform {variable_to_test}",
-                            lambda: sim_reform.calculate(variable_to_test, map_to="household", period=2026)
-                        )
+                    # Reform variable calculation
+                    reform_calc = profile_step(
+                        f"Reform {variable_to_test}",
+                        lambda: sim_reform.calculate(variable_to_test, map_to="household", period=2026)
+                    )
 
-                        col1, col2 = st.columns(2)
-                        with col1:
-                            st.metric(f"Baseline {variable_to_test}", f"{baseline_calc['time']:.3f}s")
-                        with col2:
-                            st.metric(f"Reform {variable_to_test}", f"{reform_calc['time']:.3f}s")
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.metric(f"Baseline {variable_to_test}", f"{baseline_calc['time']:.3f}s")
+                    with col2:
+                        st.metric(f"Reform {variable_to_test}", f"{reform_calc['time']:.3f}s")
 
-                        st.info(f"Calculated {len(baseline_calc['result'])} values across income range")
-        else:
-            st.info("Enable 'Profile with reform' to compare baseline vs reform performance")
+                    st.info(f"Calculated {len(baseline_calc['result'])} values across income range")
 
 # Add documentation
 with st.expander("📖 How to Use This Profiler"):
