@@ -1,107 +1,164 @@
-# PolicyEngine Profiler
+# PolicyEngine profiler
 
-Performance profiling tools for PolicyEngine simulations.
+A rebuilt profiler for PolicyEngine simulation setup and variable calculation cost.
 
-## Purpose
+This version replaces the old Streamlit prototype with:
 
-Diagnose and visualize performance bottlenecks in PolicyEngine simulations, especially:
-- Reform simulation overhead
-- Parameter uprating costs
-- Variable calculation performance
-- Memory usage patterns
+- Next.js 14 App Router
+- Tailwind 4 with PolicyEngine design tokens
+- Recharts visualizations
+- A custom Modal backend for hosted profiling
 
-## Issues Discovered
+The browser owns the UI. Python owns the actual `cProfile` run.
 
-- **[policyengine-core#397](https://github.com/PolicyEngine/policyengine-core/issues/397)**: Parameter uprating takes 11+ seconds per reform simulation (700-1500x slowdown)
+## Architecture
 
-## Example Output
+```text
+Local dev: Next.js UI -> /api/local-profile -> scripts/profile_policyengine.py -> backend/profile_core.py
+Hosted app: Next.js UI -> Modal web endpoint -> backend/profile_core.py -> policyengine-us / policyengine-uk
+```
 
-See [DEMO.md](DEMO.md) for full example output showing:
-- **Baseline simulation**: 0.011s ✅
-- **Reform simulation**: 16.445s ❌ (1511x slower!)
-- **Main bottleneck**: `uprate_parameters()` at 11.2 seconds
+The backend returns structured JSON:
 
-## Tools
+- Baseline setup timing
+- Reform setup timing
+- Baseline variable timing
+- Reform variable timing
+- Total and primitive call counts
+- Top cumulative functions
+- Raw `pstats` text
+- Variable output summary across the income axis
 
-### 1. Streamlit App (`app.py`)
-Interactive profiler with visual charts and real-time metrics.
+## Defaults
+
+The rebuilt app keeps country-specific presets but removes the brittle hardcoded assumptions from the old repo.
+
+- US: current-safe ACA extension benchmark
+- UK: Universal Credit taper benchmark
+
+## Setup
+
+1. Install Node dependencies:
 
 ```bash
-uv run streamlit run app.py
+npm install
 ```
 
-Features:
-- Compare baseline vs reform simulation creation time
-- Profile variable calculations
-- View detailed cProfile output
-- Visualize function call trees
-- Export profiling data
-
-### 2. Jupyter Notebook (`profile_simulation.ipynb`)
-Detailed profiling analysis with code samples and explanations.
+2. Point the local Next.js route at a Python environment with PolicyEngine installed:
 
 ```bash
-uv run jupyter notebook profile_simulation.ipynb
+export POLICYENGINE_PYTHON=/path/to/python
 ```
 
-### 3. CLI Tool (`profile_cli.py`)
-Quick command-line profiling for CI/CD integration.
+Optional repo-path overrides if you want to profile local checkouts instead of installed packages:
 
 ```bash
-uv run python profile_cli.py --country us --reform aca_extension
+export POLICYENGINE_CORE_PATH=/path/to/policyengine-core
+export POLICYENGINE_US_PATH=/path/to/policyengine-us
+export POLICYENGINE_UK_PATH=/path/to/policyengine-uk
 ```
 
-## Installation
+3. Run the app:
 
 ```bash
-uv venv
-uv pip install -e ".[dev]"
+npm run dev
 ```
 
-## Quick Example
+4. Open `http://localhost:3000`.
 
-```python
-from policyengine_profiler import profile_simulation
+Local development uses the Node route at [route.js](/Users/maxghenis/PolicyEngine/policyengine-profiler/app/api/local-profile/route.js), which shells out to the shared Python runner.
 
-# Profile a simple reform
-results = profile_simulation(
-    country="us",
-    reform={"gov.aca.ptc_phase_out_rate[0].amount": {"2026-01-01.2100-12-31": 0}},
-    situation={
-        "people": {"you": {"age": {2026: 35}}},
-        "households": {"your household": {"members": ["you"]}}
-    }
-)
+## Hosted backend
 
-print(f"Baseline: {results['baseline_time']:.3f}s")
-print(f"Reform: {results['reform_time']:.3f}s")
-print(f"Overhead: {results['overhead_pct']:.0f}%")
+Deploy the Modal backend from [modal_app.py](/Users/maxghenis/PolicyEngine/policyengine-profiler/modal_app.py):
+
+```bash
+python3 -m pip install modal
+unset MODAL_TOKEN_ID MODAL_TOKEN_SECRET
+modal deploy modal_app.py
 ```
 
-## Common Profiling Scenarios
+That deploys the backend currently at:
 
-### 1. Reform Overhead
-```python
-profile_simulation(country="us", reform=my_reform)
+```text
+https://policyengine--policyengine-profiler-profile.modal.run
 ```
 
-### 2. Variable Calculation
-```python
-profile_variable(country="us", variable="aca_ptc", period=2026)
+The frontend now falls back to that production URL automatically. If you want to override it in Vercel, set `NEXT_PUBLIC_API_URL`:
+
+```bash
+vercel env add NEXT_PUBLIC_API_URL production
+vercel --prod --force --yes --scope policy-engine
 ```
 
-### 3. Memory Usage
-```python
-profile_memory(country="us", n_simulations=100)
+Use [.env.example](/Users/maxghenis/PolicyEngine/policyengine-profiler/.env.example) as the frontend env template.
+
+## Commands
+
+```bash
+npm run dev
+npm run lint
+npm test
+npm run build
 ```
 
-## Contributing
+## API contract
 
-Found a performance issue?
-1. Use this profiler to document it
-2. File an issue at the relevant PolicyEngine repo
-3. Include profiler output and reproduction steps
+`POST {NEXT_PUBLIC_API_URL}` in production, or `POST /api/local-profile` in local development.
 
-## License
+Example payload:
 
-AGPL-3.0
+```json
+{
+  "country": "us",
+  "incomePoints": 401,
+  "variable": "aca_ptc"
+}
+```
+
+Example response shape:
+
+```json
+{
+  "ok": true,
+  "creation": {
+    "baseline": { "elapsedSeconds": 0.03 },
+    "reform": { "elapsedSeconds": 19.1 },
+    "deltaSeconds": 19.07,
+    "ratio": 694.58
+  },
+  "variable": {
+    "baseline": { "elapsedSeconds": 0.18 },
+    "reform": { "elapsedSeconds": 27.51 },
+    "deltaSeconds": 27.33,
+    "ratio": 154.23
+  }
+}
+```
+
+## Verification
+
+These checks passed in this workspace:
+
+```bash
+npm test
+npm run lint
+npm run build
+```
+
+I also verified the shared Python backend directly with:
+
+```bash
+/Users/maxghenis/venv_analysis/bin/python scripts/profile_policyengine.py \
+  <<< '{"country":"us","incomePoints":11,"variable":"aca_ptc"}'
+```
+
+That returned a successful JSON response with live timings from the current local `policyengine-us` environment.
+
+## Notes
+
+- Local development uses the existing Python environment you point `POLICYENGINE_PYTHON` at.
+- Hosted profiling is implemented in [modal_app.py](/Users/maxghenis/PolicyEngine/policyengine-profiler/modal_app.py).
+- The Modal image pins Python 3.13 plus `policyengine-us==1.633.2` and `policyengine-uk==2.78.0`, which are current public PyPI releases compatible with Modal.
+- The UI uses the `policyengine-claude` standalone-tool conventions: Next.js, Tailwind, PE tokens, and an embeddable hash model.
+- `bun` was not available in this machine’s PATH, so the same scaffold was implemented with `npm`.
