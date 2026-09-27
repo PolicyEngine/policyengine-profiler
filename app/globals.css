@@ -1,0 +1,96 @@
+@import "tailwindcss";
+
+@theme {
+  --color-pe-primary-50: var(--pe-color-primary-50);
+  --color-pe-primary-500: var(--pe-color-primary-500);
+  --color-pe-primary-600: var(--pe-color-primary-600);
+  --color-pe-primary-700: var(--pe-color-primary-700);
+  --color-pe-primary-900: var(--pe-color-primary-900);
+  --color-pe-primary-alpha-40: var(--pe-color-primary-alpha-40);
+
+  --color-pe-gray-50: var(--pe-color-gray-50);
+  --color-pe-gray-100: var(--pe-color-gray-100);
+  --color-pe-gray-200: var(--pe-color-gray-200);
+  --color-pe-gray-600: var(--pe-color-gray-600);
+  --color-pe-gray-900: var(--pe-color-gray-900);
+
+  --color-pe-error: var(--pe-color-error);
+
+  --color-pe-bg-primary: var(--pe-color-bg-primary);
+  --color-pe-text-primary: var(--pe-color-text-primary);
+  --color-pe-text-secondary: var(--pe-color-text-secondary);
+  --color-pe-text-tertiary: var(--pe-color-text-tertiary);
+  --color-pe-border-light: var(--pe-color-border-light);
+}
+
+html {
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--pe-font-family-primary);
+  color: var(--pe-color-text-primary);
+  background:
+    radial-gradient(circle at top left, var(--pe-color-primary-alpha-40), transparent 36%),
+    linear-gradient(180deg, var(--pe-color-bg-primary), var(--pe-color-gray-50));
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  color: inherit;
+}
+
+::selection {
+  background: var(--pe-color-primary-alpha-40);
+}
+
+.panel {
+  border: 1px solid var(--pe-color-border-light);
+  background: color-mix(in srgb, var(--pe-color-bg-primary) 92%, var(--pe-color-gray-50));
+}
+
+.control {
+  width: 100%;
+  border: 1px solid var(--pe-color-border-light);
+  background: var(--pe-color-bg-primary);
+  color: var(--pe-color-text-primary);
+  border-radius: 0.875rem;
+  padding: 0.875rem 1rem;
+  font: inherit;
+}
+
+.control:focus {
+  outline: 2px solid var(--pe-color-primary-500);
+  outline-offset: 2px;
+}
+
+.metric-card {
+  border: 1px solid var(--pe-color-border-light);
+  background: var(--pe-color-bg-primary);
+}
+
+.metric-label {
+  color: var(--pe-color-text-secondary);
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.code-block {
+  border: 1px solid var(--pe-color-border-light);
+  background: var(--pe-color-gray-50);
+  color: var(--pe-color-text-primary);
+}
+
+.status-chip {
+  border: 1px solid var(--pe-color-border-light);
+  background: color-mix(in srgb, var(--pe-color-primary-alpha-40) 50%, var(--pe-color-bg-primary));
+  color: var(--pe-color-text-secondary);
+}
